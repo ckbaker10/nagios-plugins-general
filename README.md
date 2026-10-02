@@ -8,7 +8,7 @@ different parameters. This repository builds nagios-plugins from source in one
 version (currently `release-2.4.12`) so every host runs identical plugins and
 one set of Icinga2 CheckCommands fits all of them.
 
-Custom plugins live in [nagios-plugins](https://github.com/ckbaker10/nagios-plugins).
+Custom plugins live in [nagios-plugins-custom](https://github.com/ckbaker10/nagios-plugins-custom).
 
 ## Contents
 
