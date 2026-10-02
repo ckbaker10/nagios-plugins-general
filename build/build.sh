@@ -24,9 +24,13 @@ ARCH="$(uname -m)"
 declare -A IMAGES=(
     [el8]=docker.io/library/rockylinux:8
     [el9]=docker.io/library/rockylinux:9
+    [el10]=quay.io/rockylinux/rockylinux:10
     [ubuntu2204]=docker.io/library/ubuntu:22.04
     [ubuntu2404]=docker.io/library/ubuntu:24.04
     [debian12]=docker.io/library/debian:12
+    # openSUSE Leap is binary compatible with SLES of the same version
+    [sles15]=registry.opensuse.org/opensuse/leap:15.6
+    [sles16]=registry.opensuse.org/opensuse/leap:16.0
 )
 
 if command -v podman >/dev/null; then

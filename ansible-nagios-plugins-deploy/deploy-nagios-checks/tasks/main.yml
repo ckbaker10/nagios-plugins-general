@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for deploy-nagios-checks
-# Deploys the prebuilt nagios-plugins tarball (build/build.sh) matching the
-# target OS. Nothing is compiled on the hosts.
+# Downloads the prebuilt nagios-plugins tarball (build/build.sh) matching the
+# target OS from the GitHub release. Nothing is compiled on the hosts.
 
 - name: Determine build target
   ansible.builtin.set_fact:
@@ -23,34 +23,26 @@
     nagios_plugins_tarball: >-
       nagios-plugins-{{ nagios_plugins_version }}-{{ nagios_plugins_target }}-{{ ansible_facts['architecture'] }}.tar.gz
 
-- name: Read tarball checksum on controller
-  ansible.builtin.set_fact:
-    nagios_plugins_sha256: >-
-      {{ lookup('ansible.builtin.file', nagios_plugins_dist_dir ~ '/' ~ nagios_plugins_tarball ~ '.sha256').split()[0] }}
-
 - name: Install runtime dependencies
   ansible.builtin.package:
     name: "{{ nagios_plugins_runtime_packages[nagios_plugins_target] }}"
     state: present
+  when: ansible_facts['os_family'] != 'Suse'
 
-- name: Copy tarball to host
-  ansible.builtin.copy:
-    src: "{{ nagios_plugins_dist_dir }}/{{ nagios_plugins_tarball }}"
+# ansible-core has no zypper backend for the generic package module
+- name: Install runtime dependencies (SUSE)
+  community.general.zypper:
+    name: "{{ nagios_plugins_runtime_packages[nagios_plugins_target] }}"
+    state: present
+  when: ansible_facts['os_family'] == 'Suse'
+
+- name: Download tarball from GitHub release
+  ansible.builtin.get_url:
+    url: "{{ nagios_plugins_release_url }}/{{ nagios_plugins_tarball }}"
     dest: "{{ nagios_plugins_tmp_dir }}/{{ nagios_plugins_tarball }}"
+    checksum: "sha256:{{ nagios_plugins_release_url }}/{{ nagios_plugins_tarball }}.sha256"
     mode: '0644'
   register: nagios_plugins_copy
-
-- name: Checksum tarball on host
-  ansible.builtin.stat:
-    path: "{{ nagios_plugins_tmp_dir }}/{{ nagios_plugins_tarball }}"
-    checksum_algorithm: sha256
-  register: nagios_plugins_tarball_stat
-
-- name: Verify tarball checksum
-  ansible.builtin.assert:
-    that: nagios_plugins_tarball_stat.stat.checksum == nagios_plugins_sha256
-    fail_msg: "SHA-256 mismatch for {{ nagios_plugins_tarball }}"
-    quiet: true
 
 - name: Check installed build
   ansible.builtin.stat:
@@ -80,5 +72,5 @@
   ansible.builtin.debug:
     msg:
       - "{{ nagios_plugins_verify.stdout }}"
-      - "Build: {{ nagios_plugins_tarball }} ({{ nagios_plugins_sha256 }})"
+      - "Build: {{ nagios_plugins_release_url }}/{{ nagios_plugins_tarball }}"
       - "Plugin directory: {{ nagios_plugins_install_prefix }}/libexec"

@@ -12,7 +12,7 @@ case "$ID" in
         for attempt in 1 2 3; do
             if dnf -y -q upgrade >/dev/null &&
                 dnf -y -q install git m4 gettext gettext-devel automake autoconf gcc make \
-                    openssl-devel perl perl-devel tar gzip procps-ng iputils bind-utils which \
+                    openssl-devel perl perl-devel tar gzip procps-ng iputils bind-utils which openssh-clients \
                     >/dev/null; then
                 break
             fi
@@ -21,11 +21,19 @@ case "$ID" in
             sleep 10
         done
         ;;
+    opensuse-leap|sles)
+        zypper -q -n install git m4 gettext-tools automake autoconf gcc make \
+            libopenssl-devel perl tar gzip procps iputils bind-utils which openssh-clients >/dev/null
+        # Leap/SLES 16 moved uptime (used by check_load) to coreutils-systemd
+        if [ "${VERSION_ID%%.*}" -ge 16 ]; then
+            zypper -q -n install coreutils-systemd >/dev/null
+        fi
+        ;;
     ubuntu|debian)
         export DEBIAN_FRONTEND=noninteractive
         apt-get -qq update
         apt-get -qq install -y git m4 gettext autopoint automake autoconf gcc make \
-            libssl-dev perl libperl-dev procps iputils-ping dnsutils >/dev/null
+            libssl-dev perl libperl-dev procps iputils-ping dnsutils openssh-client >/dev/null
         ;;
     *)
         echo "ERROR: unsupported build OS $ID" >&2
@@ -36,7 +44,7 @@ esac
 git -c advice.detachedHead=false clone -q --depth 1 --branch "$TAG" "$REPO" /src
 cd /src
 ./tools/setup >/dev/null
-./configure -q --prefix="$PREFIX" --with-cgiurl=/nagios/cgi-bin --with-openssl
+./configure -q --prefix="$PREFIX" --with-cgiurl=/nagios/cgi-bin
 make -s -j"$(nproc)"
 make -s install DESTDIR=/stage
 make -s install-root DESTDIR=/stage

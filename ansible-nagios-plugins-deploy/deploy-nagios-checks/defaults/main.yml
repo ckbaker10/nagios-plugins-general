@@ -8,8 +8,9 @@ nagios_plugins_version: "2.4.12"
 # Installation prefix, must match PREFIX used by build/build.sh
 nagios_plugins_install_prefix: "/opt/monitoring-nagios-git-{{ nagios_plugins_version }}"
 
-# Directory on the Ansible controller containing the tarballs and .sha256 files
-nagios_plugins_dist_dir: "{{ playbook_dir }}/../dist"
+# GitHub release containing the tarballs and .sha256 files (build/release.sh)
+nagios_plugins_release_tag: "v{{ nagios_plugins_version }}-1"
+nagios_plugins_release_url: "https://github.com/ckbaker10/nagios-plugins-general/releases/download/{{ nagios_plugins_release_tag }}"
 
 # Temporary location of the tarball on the target host
 nagios_plugins_tmp_dir: "/var/tmp"
@@ -22,15 +23,28 @@ nagios_plugins_targets:
   Rocky-9: el9
   RedHat-9: el9
   AlmaLinux-9: el9
+  Rocky-10: el10
+  RedHat-10: el10
+  AlmaLinux-10: el10
+  SLES-15: sles15
+  SLES_SAP-15: sles15
+  openSUSE Leap-15: sles15
+  SLES-16: sles16
+  SLES_SAP-16: sles16
+  openSUSE Leap-16: sles16
   Ubuntu-22: ubuntu2204
   Ubuntu-24: ubuntu2404
   Debian-12: debian12
 
-# Runtime packages per target (shared libraries and helper binaries the
-# plugins were configured against: uptime, ping, dig, perl)
+# Runtime packages per target: shared libraries and helper binaries the
+# plugins were configured against (ps/uptime, ping, dig, ssh, perl), plus
+# tar/gzip for unpacking
 nagios_plugins_runtime_packages:
-  el8: [openssl-libs, procps-ng, iputils, bind-utils, perl]
-  el9: [openssl-libs, procps-ng, iputils, bind-utils, perl]
-  ubuntu2204: [libssl3, procps, iputils-ping, dnsutils, perl]
-  ubuntu2404: [libssl3t64, procps, iputils-ping, dnsutils, perl]
-  debian12: [libssl3, procps, iputils-ping, dnsutils, perl]
+  el8: &el [openssl-libs, procps-ng, iputils, bind-utils, openssh-clients, perl, tar, gzip]
+  el9: *el
+  el10: *el
+  sles15: &sles [libopenssl3, procps, iputils, bind-utils, openssh-clients, perl, tar, gzip]
+  sles16: [libopenssl3, procps, coreutils-systemd, iputils, bind-utils, openssh-clients, perl, tar, gzip]
+  ubuntu2204: [libssl3, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
+  ubuntu2404: [libssl3t64, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
+  debian12: [libssl3, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
