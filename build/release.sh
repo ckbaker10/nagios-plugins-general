@@ -18,19 +18,22 @@ fi
 TAG="$1"
 
 shopt -s nullglob
-assets=("$DIST_DIR"/*.tar.gz "$DIST_DIR"/*.tar.gz.sha256)
+# Only tarballs of the version in the tag (v2.5-1 -> nagios-plugins-2.5-*)
+VERSION="${TAG#v}"
+VERSION="${VERSION%-*}"
+assets=("$DIST_DIR"/nagios-plugins-"$VERSION"-*.tar.gz "$DIST_DIR"/nagios-plugins-"$VERSION"-*.tar.gz.sha256)
 if [ ${#assets[@]} -eq 0 ]; then
     echo "ERROR: no tarballs in $DIST_DIR, run build/build.sh first" >&2
     exit 1
 fi
 
-(cd "$DIST_DIR" && sha256sum -c --quiet ./*.sha256)
+(cd "$DIST_DIR" && sha256sum -c --quiet ./nagios-plugins-"$VERSION"-*.sha256)
 
 notes="Prebuilt nagios-plugins, one tarball per target OS.
 
 SHA-256:
 \`\`\`
-$(cat "$DIST_DIR"/*.sha256)
+$(cat "$DIST_DIR"/nagios-plugins-"$VERSION"-*.sha256)
 \`\`\`"
 
 cd "$REPO_DIR"
