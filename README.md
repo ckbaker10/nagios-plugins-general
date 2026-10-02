@@ -23,7 +23,9 @@ Custom plugins live in [nagios-plugins](https://github.com/ckbaker10/nagios-plug
 
 ```bash
 git clone --branch release-2.4.12 --depth 1 https://github.com/nagios-plugins/nagios-plugins.git work/nagios-plugins
-python3 nagios-plugins-parser/parse_nagios_plugins.py -p work/nagios-plugins -o icinga-commands/commands-nagios-plugins-2.4.12.conf
+nagios-plugins-parser/capture-help.sh work/help
+nagios-plugins-parser/parse_nagios_plugins.py -p work/nagios-plugins --help-dir work/help \
+    -o icinga-commands/commands-nagios-plugins-2.4.12.conf.dynamic-path
 ```
 
 See [icinga-commands/NAGIOS-PLUGINS-IMPORT.md](icinga-commands/NAGIOS-PLUGINS-IMPORT.md)
