@@ -5,23 +5,7 @@
 # target OS from the GitHub release. Nothing is compiled on the hosts.
 
 - name: Determine build target
-  ansible.builtin.set_fact:
-    nagios_plugins_target: >-
-      {{ nagios_plugins_targets[ansible_facts['distribution'] ~ '-'
-         ~ ansible_facts['distribution_major_version']] | default('') }}
-
-- name: Fail on unsupported distribution
-  ansible.builtin.fail:
-    msg: >-
-      No nagios-plugins build for {{ ansible_facts['distribution'] }}
-      {{ ansible_facts['distribution_major_version'] }}. Add a target to
-      build/build.sh and nagios_plugins_targets.
-  when: nagios_plugins_target | length == 0
-
-- name: Set tarball name
-  ansible.builtin.set_fact:
-    nagios_plugins_tarball: >-
-      nagios-plugins-{{ nagios_plugins_version }}-{{ nagios_plugins_target }}-{{ ansible_facts['architecture'] }}.tar.gz
+  ansible.builtin.include_tasks: detect.yml
 
 # EPEL provides fping and the Perl modules (Net::SNMP, Crypt::X509, ...)
 - name: Enable EPEL (Rocky/Alma)
@@ -157,9 +141,19 @@
     state: present
   when: ansible_facts['os_family'] == 'Suse'
 
+# Versions are installed side by side; the CheckCommands use the stable link,
+# so switching nagios_plugins_version (upgrade or rollback) needs no Icinga
+# change. Older versions stay installed for rollback.
+- name: Point {{ nagios_plugins_link }} to {{ nagios_plugins_version }}
+  ansible.builtin.file:
+    src: "{{ nagios_plugins_install_prefix }}"
+    dest: "{{ nagios_plugins_link }}"
+    state: link
+    force: true
+
 - name: Verify installation
   ansible.builtin.command:
-    cmd: "{{ nagios_plugins_install_prefix }}/libexec/check_http -V"
+    cmd: "{{ nagios_plugins_link }}/libexec/check_http -V"
   register: nagios_plugins_verify
   changed_when: false
 
@@ -167,5 +161,6 @@
   ansible.builtin.debug:
     msg:
       - "{{ nagios_plugins_verify.stdout }}"
+      - "Host: {{ nagios_plugins_os_desc }}"
       - "Build: {{ nagios_plugins_release_url }}/{{ nagios_plugins_tarball }}"
-      - "Plugin directory: {{ nagios_plugins_install_prefix }}/libexec"
+      - "Plugin directory: {{ nagios_plugins_link }}/libexec -> {{ nagios_plugins_install_prefix }}"

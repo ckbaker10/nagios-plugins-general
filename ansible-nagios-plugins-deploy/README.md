@@ -7,7 +7,8 @@ build tools are installed there.
 
 The role picks the tarball matching the host's distribution and major version,
 downloads it, checks it against the `.sha256` file of the release, unpacks it
-to `/opt/monitoring-nagios-git-2.4.12` and installs the packages listed in
+to `/opt/monitoring-nagios-git-<version>`, points the symlink
+`/opt/monitoring-nagios-git` to it and installs the packages listed in
 `RUNTIME-PACKAGES` inside the tarball. The build writes that list: owners of
 the shared libraries the plugins link against (OpenSSL, libpq, MariaDB/MySQL,
 OpenLDAP, libdbi, ...) plus helper programs (`snmpget`, `fping`, `dig`, `ssh`,
@@ -20,21 +21,18 @@ CodeReady Builder on RHEL), where fping and the Perl modules live. Disable with
 Known gap: `Crypt::X509` is not packaged for SUSE, so `check_ssl_validity`
 does not run there.
 
-## Supported targets
+## Target detection
 
-| Host OS | Target |
-|---|---|
-| Rocky/RHEL/Alma 8 | `el8` |
-| Rocky/RHEL/Alma 9 | `el9` |
-| Rocky/RHEL/Alma 10 | `el10` |
-| SLES / openSUSE Leap 15 (SP6+) | `sles15` |
-| SLES / openSUSE Leap 16 | `sles16` |
-| Ubuntu 22.04 | `ubuntu2204` |
-| Ubuntu 24.04 | `ubuntu2404` |
-| Debian 12 | `debian12` |
+The role reads `/etc/os-release` (`ID`, `VERSION_ID`) and the userland
+architecture (`dpkg --print-architecture` on Debian/Ubuntu, otherwise
+`uname -m`), so Armbian maps to its Debian/Ubuntu base and 32-bit Raspberry Pi
+OS with a 64-bit kernel still gets the 32-bit build. Raspberry Pi OS 32-bit
+(`ID=raspbian` or `/etc/rpi-issue` on armhf) always uses the ARMv6 `raspios*`
+build. All targets, architectures and supported boards are listed in
+[../docs/PLATFORMS.md](../docs/PLATFORMS.md).
 
-A new OS needs a container image in `build/build.sh`, its packages in
-`build/container-build.sh` and an entry in `nagios_plugins_targets`.
+Ansible requirements on the hosts: Python 3.8+ for current ansible-core (EL8:
+install `python3.12` or use ansible-core 2.16 on the controller).
 
 ## Usage
 
@@ -48,19 +46,22 @@ ansible-playbook -i inventory.ini playbook.yml
 ansible-playbook -i inventory.ini playbook.yml --limit myserver
 ```
 
-New build: `../build/build.sh`, then `../build/release.sh v2.4.12-3` and set
-`nagios_plugins_release_tag` accordingly.
+New build: `../build/build.sh` (only the changed targets), then
+`../build/release.sh v2.5-2` and set `nagios_plugins_release_tag` accordingly.
+Upgrade and rollback between versions: see [../docs/VERSIONING.md](../docs/VERSIONING.md).
 
 Re-running the playbook changes nothing as long as the tarball is unchanged.
-A new tarball replaces the whole installation directory.
+A new tarball of the same version replaces that version's directory; other
+versions stay installed.
 
 ## Variables
 
 See `deploy-nagios-checks/defaults/main.yml`:
 
-- `nagios_plugins_version`: version of the tarballs (default `2.4.12`)
+- `nagios_plugins_version`: version to install and link (default `2.5`)
+- `nagios_plugins_link`: stable path used by the CheckCommands (default `/opt/monitoring-nagios-git`)
 - `nagios_plugins_install_prefix`: must match `PREFIX` of the build
-- `nagios_plugins_release_tag`: GitHub release to deploy (default `v2.4.12-2`)
+- `nagios_plugins_release_tag`: GitHub release to deploy (default `v2.5-1`)
 - `nagios_plugins_release_url`: download base URL of the release
 - `nagios_plugins_targets`: OS to build target mapping
 - `nagios_plugins_extra_packages`: additional packages to install
@@ -69,6 +70,6 @@ See `deploy-nagios-checks/defaults/main.yml`:
 ## Verify
 
 ```bash
-/opt/monitoring-nagios-git-2.4.12/libexec/check_http -V
-cat /opt/monitoring-nagios-git-2.4.12/BUILDINFO
+/opt/monitoring-nagios-git/libexec/check_http -V
+cat /opt/monitoring-nagios-git/BUILDINFO
 ```

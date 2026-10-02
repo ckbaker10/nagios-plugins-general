@@ -13,8 +13,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 DIST_DIR="${DIST_DIR:-$REPO_DIR/dist}"
-VERSION="${VERSION:-2.4.12}"
-TARBALL="nagios-plugins-$VERSION-ubuntu2404-$(uname -m).tar.gz"
+VERSION="${VERSION:-2.5}"
+TARBALL="nagios-plugins-$VERSION-ubuntu2404-x86_64.tar.gz"
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 OUTDIR" >&2
@@ -36,7 +36,10 @@ fi
 mkdir -p "$OUTDIR"
 rm -f "$OUTDIR"/check_*.txt
 
-"$RUNTIME" run --rm \
+# Explicit platform: the local ubuntu:24.04 tag may point to another
+# architecture after multi-arch builds
+"$RUNTIME" pull -q --platform linux/amd64 docker.io/library/ubuntu:24.04 >/dev/null
+"$RUNTIME" run --rm --platform linux/amd64 \
     -v "$DIST_DIR:/dist:ro,Z" \
     -v "$(cd "$OUTDIR" && pwd):/out:Z" \
     -e TARBALL="$TARBALL" \

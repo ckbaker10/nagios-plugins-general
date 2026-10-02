@@ -1,0 +1,62 @@
+#SPDX-License-Identifier: MIT-0
+---
+# Determine build target and architecture of the host
+
+# The target is derived from /etc/os-release (ID, VERSION_ID) rather than
+# Ansible's distribution facts, so derivatives that keep the os-release of
+# their base (Armbian) map to the matching Debian/Ubuntu build.
+- name: Read /etc/os-release
+  ansible.builtin.slurp:
+    src: /etc/os-release
+  register: nagios_plugins_os_release_file
+
+- name: Parse /etc/os-release
+  ansible.builtin.set_fact:
+    nagios_plugins_os_release: >-
+      {{ dict(nagios_plugins_os_release_file.content | b64decode
+         | regex_findall('^([A-Z_]+)=["\x27]?([^"\x27\n]*)', multiline=True)) }}
+
+# Raspberry Pi OS 32-bit (Raspbian) reports ID=raspbian; older images may
+# report ID=debian, but always have /etc/rpi-issue
+- name: Check for Raspberry Pi OS
+  ansible.builtin.stat:
+    path: /etc/rpi-issue
+  register: nagios_plugins_rpi_issue
+
+# The userland architecture matters, not the kernel: 32-bit Raspberry Pi OS
+# often runs a 64-bit kernel and reports aarch64 in uname -m
+- name: Detect userland architecture (Debian family)
+  ansible.builtin.command:
+    cmd: dpkg --print-architecture
+  register: nagios_plugins_dpkg_arch
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Determine build target and architecture
+  vars:
+    os_id: "{{ nagios_plugins_os_release.ID | default('') }}"
+    os_version: "{{ nagios_plugins_os_release.VERSION_ID | default('') }}"
+    arch: >-
+      {{ {'amd64': 'x86_64', 'arm64': 'aarch64', 'armhf': 'armhf'}[nagios_plugins_dpkg_arch.stdout]
+         | default(nagios_plugins_dpkg_arch.stdout)
+         if ansible_facts['os_family'] == 'Debian' else ansible_facts['architecture'] }}
+    raspios: "{{ os_id == 'raspbian' or (nagios_plugins_rpi_issue.stat.exists and arch == 'armhf') }}"
+  ansible.builtin.set_fact:
+    nagios_plugins_target: >-
+      {{ ('raspios' ~ os_version.split('.')[0]) if raspios
+         else nagios_plugins_targets[os_id ~ '-' ~ (os_version if os_id == 'ubuntu' else os_version.split('.')[0])]
+              | default('') }}
+    nagios_plugins_arch: "{{ 'armv6hf' if raspios else arch }}"
+    nagios_plugins_os_desc: "{{ os_id }} {{ os_version }} ({{ arch }})"
+
+- name: Fail on unsupported distribution
+  ansible.builtin.fail:
+    msg: >-
+      No nagios-plugins build for {{ nagios_plugins_os_desc }}. Add a target to
+      build/targets.conf and nagios_plugins_targets.
+  when: nagios_plugins_target | length == 0
+
+- name: Set tarball name
+  ansible.builtin.set_fact:
+    nagios_plugins_tarball: >-
+      nagios-plugins-{{ nagios_plugins_version }}-{{ nagios_plugins_target }}-{{ nagios_plugins_arch }}.tar.gz

@@ -5,7 +5,7 @@ in one pinned version for all Linux hosts.
 
 Distribution packages (Ubuntu, Rocky, ...) ship different plugin versions with
 different parameters. This repository builds nagios-plugins from source in one
-version (currently `release-2.4.12`) so every host runs identical plugins and
+version (currently `release-2.5`) so every host runs identical plugins and
 one set of Icinga2 CheckCommands fits all of them.
 
 Custom plugins live in [nagios-plugins-custom](https://github.com/ckbaker10/nagios-plugins-custom).
@@ -15,17 +15,17 @@ Custom plugins live in [nagios-plugins-custom](https://github.com/ckbaker10/nagi
 | Path | Purpose |
 |---|---|
 | `build/` | Builds nagios-plugins once per target OS in a container and packages it as `dist/*.tar.gz` |
-| `ansible-nagios-plugins-deploy/` | Ansible role/playbook: downloads the matching tarball from the GitHub release and installs it to `/opt/monitoring-nagios-git-2.4.12` |
+| `ansible-nagios-plugins-deploy/` | Ansible role/playbook: downloads the matching tarball from the GitHub release and installs it to `/opt/monitoring-nagios-git-<version>`, linked as `/opt/monitoring-nagios-git` |
 | `nagios-plugins-parser/` | Parses the nagios-plugins sources and generates Icinga2 CheckCommand definitions |
-| `icinga-commands/` | Generated CheckCommands for 2.4.12 (static and dynamic path) and import notes |
+| `icinga-commands/` | Generated CheckCommands (static and dynamic path) and import notes |
 
 ## Generate CheckCommands
 
 ```bash
-git clone --branch release-2.4.12 --depth 1 https://github.com/nagios-plugins/nagios-plugins.git work/nagios-plugins
+git clone --branch release-2.5 --depth 1 https://github.com/nagios-plugins/nagios-plugins.git work/nagios-plugins
 nagios-plugins-parser/capture-help.sh work/help
 nagios-plugins-parser/parse_nagios_plugins.py -p work/nagios-plugins --help-dir work/help \
-    -o icinga-commands/commands-nagios-plugins-2.4.12.conf.dynamic-path
+    -o icinga-commands/commands-nagios-plugins.conf.dynamic-path
 ```
 
 See [icinga-commands/NAGIOS-PLUGINS-IMPORT.md](icinga-commands/NAGIOS-PLUGINS-IMPORT.md)
@@ -33,22 +33,32 @@ for the parsed plugin list, import steps and variable naming.
 
 ## Build
 
+Targets and architectures are listed in `build/targets.conf`; see
+[docs/PLATFORMS.md](docs/PLATFORMS.md) for the OS/hardware matrix.
+
 ```bash
-build/build.sh                 # all targets: el8 el9 el10 sles15 sles16 ubuntu2204 ubuntu2404 debian12
-build/build.sh el8 ubuntu2404  # selected targets
+build/build.sh                          # everything (27 tarballs, takes hours under emulation)
+build/build.sh -j 2 debian13:armhf      # only one target/architecture
+NAGIOS_PLUGINS_TAG=release-2.4.12 build/build.sh el9
 ```
 
-Requires podman or docker. Each target is built in a container of that OS from
-the same tag with the same configure flags. RHEL targets are built on Rocky
-Linux, SLES targets on the binary-compatible openSUSE Leap of the same version. One build per OS is needed because
-the plugins link against the system OpenSSL and libc; plugins and parameters
-are identical on all targets. Each tarball contains a `BUILDINFO` file
-(tag, commit, build OS) and gets a `.sha256` file next to it.
+**Rebuild only what failed or changed.** ARM targets run under QEMU user
+emulation and take much longer than x86_64; never rebuild the whole matrix to
+fix single targets. Logs are in `work/build-logs/`.
 
-Publish the tarballs as a GitHub release (requires `gh auth login`):
+Requires podman or docker and, for ARM, `qemu-user-static` with binfmt. Each
+target is built in a container of that OS from the same tag with the same
+configure flags. RHEL targets are built on Rocky Linux, SLES targets on the
+binary-compatible openSUSE Leap of the same version, Raspberry Pi OS 32-bit on
+a Raspbian root filesystem created by `build/raspios-image.sh`. Each tarball
+contains `BUILDINFO` (tag, commit, build OS) and `RUNTIME-PACKAGES` and gets a
+`.sha256` file next to it.
+
+Publish the tarballs as a GitHub release (requires `gh auth login`), see
+[docs/VERSIONING.md](docs/VERSIONING.md):
 
 ```bash
-build/release.sh v2.4.12-1
+build/release.sh v2.5-1
 ```
 
 ## Deploy

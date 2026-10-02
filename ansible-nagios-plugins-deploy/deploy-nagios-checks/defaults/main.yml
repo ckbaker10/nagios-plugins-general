@@ -2,39 +2,47 @@
 ---
 # defaults file for deploy-nagios-checks
 
-# Version of the prebuilt tarballs (see build/build.sh)
-nagios_plugins_version: "2.4.12"
+# nagios-plugins version to install (see build/build.sh); versions are
+# installed side by side and nagios_plugins_link points to this one
+nagios_plugins_version: "2.5"
 
 # Installation prefix, must match PREFIX used by build/build.sh
 nagios_plugins_install_prefix: "/opt/monitoring-nagios-git-{{ nagios_plugins_version }}"
 
+# Stable path used by the Icinga2 CheckCommands
+nagios_plugins_link: "/opt/monitoring-nagios-git"
+
 # GitHub release containing the tarballs and .sha256 files (build/release.sh)
-nagios_plugins_release_tag: "v{{ nagios_plugins_version }}-2"
+nagios_plugins_release_tag: "v{{ nagios_plugins_version }}-1"
 nagios_plugins_release_url: "https://github.com/ckbaker10/nagios-plugins-general/releases/download/{{ nagios_plugins_release_tag }}"
 
 # Temporary location of the tarball on the target host
 nagios_plugins_tmp_dir: "/var/tmp"
 
-# Build target per distribution: "<distribution>-<major version>" -> target
+# Build target per /etc/os-release "ID-VERSION_ID": major version, full
+# version for Ubuntu. Raspberry Pi OS 32-bit is detected separately
+# (raspios12/raspios13). See docs/PLATFORMS.md.
 nagios_plugins_targets:
-  Rocky-8: el8
-  RedHat-8: el8
-  AlmaLinux-8: el8
-  Rocky-9: el9
-  RedHat-9: el9
-  AlmaLinux-9: el9
-  Rocky-10: el10
-  RedHat-10: el10
-  AlmaLinux-10: el10
-  SLES-15: sles15
-  SLES_SAP-15: sles15
-  openSUSE Leap-15: sles15
-  SLES-16: sles16
-  SLES_SAP-16: sles16
-  openSUSE Leap-16: sles16
-  Ubuntu-22: ubuntu2204
-  Ubuntu-24: ubuntu2404
-  Debian-12: debian12
+  rocky-8: el8
+  rhel-8: el8
+  almalinux-8: el8
+  rocky-9: el9
+  rhel-9: el9
+  almalinux-9: el9
+  rocky-10: el10
+  rhel-10: el10
+  almalinux-10: el10
+  sles-15: sles15
+  sles_sap-15: sles15
+  opensuse-leap-15: sles15
+  sles-16: sles16
+  sles_sap-16: sles16
+  opensuse-leap-16: sles16
+  debian-12: debian12
+  debian-13: debian13
+  ubuntu-22.04: ubuntu2204
+  ubuntu-24.04: ubuntu2404
+  ubuntu-26.04: ubuntu2604
 
 # Runtime packages come from RUNTIME-PACKAGES inside the tarball; add
 # further packages here if needed

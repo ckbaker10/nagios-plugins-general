@@ -23,8 +23,8 @@ case "$ID" in
             RUNTIME_EXTRA="$RUNTIME_EXTRA coreutils-systemd"
         fi
         ;;
-    ubuntu|debian)
-        RUNTIME_EXTRA="perl procps iputils-ping dnsutils openssh-client snmp fping
+    ubuntu|debian|raspbian)
+        RUNTIME_EXTRA="perl procps iputils-ping bind9-dnsutils openssh-client snmp fping
             libnet-snmp-perl libcrypt-x509-perl libwww-perl libtimedate-perl libtext-glob-perl"
         ;;
 esac
@@ -62,11 +62,11 @@ case "$ID" in
             zypper -q -n install openldap2-devel >/dev/null
         fi
         ;;
-    ubuntu|debian)
+    ubuntu|debian|raspbian)
         export DEBIAN_FRONTEND=noninteractive
         apt-get -qq update
         apt-get -qq install -y git m4 gettext autopoint automake autoconf gcc make \
-            libssl-dev perl libperl-dev procps iputils-ping dnsutils openssh-client \
+            libssl-dev perl libperl-dev procps iputils-ping bind9-dnsutils openssh-client \
             snmp fping libpq-dev libdbi-dev libldap-dev default-libmysqlclient-dev \
             >/dev/null
         ;;
@@ -99,7 +99,7 @@ libs=$(find "/stage$PREFIX/libexec" -type f -perm -u+x -exec ldd {} \; 2>/dev/nu
     awk '/=> \// {print $3}' | sort -u)
 for lib in $libs; do
     case "$ID" in
-        ubuntu|debian)
+        ubuntu|debian|raspbian)
             # usrmerge: dpkg may know the file under /lib or /usr/lib
             { dpkg -S "$lib" 2>/dev/null || dpkg -S "${lib#/usr}" 2>/dev/null ||
                 dpkg -S "$(realpath "$lib")"; } | head -1 | cut -d: -f1
@@ -112,4 +112,11 @@ done > /tmp/lib-packages
 # shellcheck disable=SC2086 # word splitting of the package list is intended
 printf '%s\n' $RUNTIME_EXTRA | cat - /tmp/lib-packages | sort -u > "/stage$PREFIX/RUNTIME-PACKAGES"
 
-tar -C /stage --numeric-owner -czf "/dist/$ARCHIVE.tar.gz" "${PREFIX#/}"
+# GNU tar of newer distributions (Ubuntu 26.04) uses a stat call the host's
+# QEMU user emulation does not implement; build.sh then packs the copied tree
+if ! tar -C /stage --numeric-owner -czf "/dist/$ARCHIVE.tar.gz" "${PREFIX#/}" 2>/tmp/tar.err; then
+    cat /tmp/tar.err
+    echo "tar failed, leaving the tree for build.sh to pack"
+    rm -f "/dist/$ARCHIVE.tar.gz"
+    cp -a /stage "/dist/$ARCHIVE.stage"
+fi
