@@ -1,40 +1,36 @@
 #SPDX-License-Identifier: MIT-0
 ---
-# defaults file for deploy-role
+# defaults file for deploy-nagios-checks
 
-# Nagios plugins repository and version
-nagios_plugins_repo: "https://github.com/nagios-plugins/nagios-plugins.git"
-nagios_plugins_version: "release-2.4.12"
+# Version of the prebuilt tarballs (see build/build.sh)
+nagios_plugins_version: "2.4.12"
 
-# Installation paths
-nagios_plugins_install_prefix: "/opt/monitoring-nagios-git-2.4.12"
-nagios_plugins_cgi_url: "/nagios/cgi-bin"
+# Installation prefix, must match PREFIX used by build/build.sh
+nagios_plugins_install_prefix: "/opt/monitoring-nagios-git-{{ nagios_plugins_version }}"
 
-# Build directory
-nagios_plugins_build_dir: "/tmp/nagios-plugins-build"
+# Directory on the Ansible controller containing the tarballs and .sha256 files
+nagios_plugins_dist_dir: "{{ playbook_dir }}/../dist"
 
-# Required packages for building (RHEL/Fedora/Rocky/Alma)
-nagios_plugins_build_packages_redhat:
-  - git
-  - m4
-  - gettext
-  - automake
-  - autoconf
-  - gcc
-  - make
-  - openssl-devel
-  - perl
-  - perl-devel
+# Temporary location of the tarball on the target host
+nagios_plugins_tmp_dir: "/var/tmp"
 
-# Required packages for building (Ubuntu/Debian)
-nagios_plugins_build_packages_debian:
-  - git
-  - m4
-  - gettext
-  - automake
-  - autoconf
-  - gcc
-  - make
-  - libssl-dev
-  - perl
-  - libperl-dev
+# Build target per distribution: "<distribution>-<major version>" -> target
+nagios_plugins_targets:
+  Rocky-8: el8
+  RedHat-8: el8
+  AlmaLinux-8: el8
+  Rocky-9: el9
+  RedHat-9: el9
+  AlmaLinux-9: el9
+  Ubuntu-22: ubuntu2204
+  Ubuntu-24: ubuntu2404
+  Debian-12: debian12
+
+# Runtime packages per target (shared libraries and helper binaries the
+# plugins were configured against: uptime, ping, dig, perl)
+nagios_plugins_runtime_packages:
+  el8: [openssl-libs, procps-ng, iputils, bind-utils, perl]
+  el9: [openssl-libs, procps-ng, iputils, bind-utils, perl]
+  ubuntu2204: [libssl3, procps, iputils-ping, dnsutils, perl]
+  ubuntu2404: [libssl3t64, procps, iputils-ping, dnsutils, perl]
+  debian12: [libssl3, procps, iputils-ping, dnsutils, perl]

@@ -1,37 +1,21 @@
 #SPDX-License-Identifier: MIT-0
 galaxy_info:
-  author: Nagios Plugins Team
-  description: Deploy and compile official Nagios plugins from GitHub
-  company: Nagios
-
+  author: ckbaker10
+  description: Deploy prebuilt nagios-plugins tarballs, identical on all hosts
   license: MIT-0
-
-  min_ansible_version: "2.9"
-
+  min_ansible_version: "2.12"
   platforms:
     - name: EL
-      versions:
-        - "7"
-        - "8"
-        - "9"
-    - name: Fedora
-      versions:
-        - all
+      versions: ["8", "9"]
     - name: Ubuntu
-      versions:
-        - focal
-        - jammy
+      versions: [jammy, noble]
     - name: Debian
-      versions:
-        - buster
-        - bullseye
-        - bookworm
+      versions: [bookworm]
 
   galaxy_tags:
     - nagios
     - monitoring
     - plugins
     - deployment
-    - compilation
 
 dependencies: []
