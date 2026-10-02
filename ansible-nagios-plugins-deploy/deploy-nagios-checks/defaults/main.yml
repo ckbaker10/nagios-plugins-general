@@ -9,7 +9,7 @@ nagios_plugins_version: "2.4.12"
 nagios_plugins_install_prefix: "/opt/monitoring-nagios-git-{{ nagios_plugins_version }}"
 
 # GitHub release containing the tarballs and .sha256 files (build/release.sh)
-nagios_plugins_release_tag: "v{{ nagios_plugins_version }}-1"
+nagios_plugins_release_tag: "v{{ nagios_plugins_version }}-2"
 nagios_plugins_release_url: "https://github.com/ckbaker10/nagios-plugins-general/releases/download/{{ nagios_plugins_release_tag }}"
 
 # Temporary location of the tarball on the target host
@@ -36,15 +36,10 @@ nagios_plugins_targets:
   Ubuntu-24: ubuntu2404
   Debian-12: debian12
 
-# Runtime packages per target: shared libraries and helper binaries the
-# plugins were configured against (ps/uptime, ping, dig, ssh, perl), plus
-# tar/gzip for unpacking
-nagios_plugins_runtime_packages:
-  el8: &el [openssl-libs, procps-ng, iputils, bind-utils, openssh-clients, perl, tar, gzip]
-  el9: *el
-  el10: *el
-  sles15: &sles [libopenssl3, procps, iputils, bind-utils, openssh-clients, perl, tar, gzip]
-  sles16: [libopenssl3, procps, coreutils-systemd, iputils, bind-utils, openssh-clients, perl, tar, gzip]
-  ubuntu2204: [libssl3, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
-  ubuntu2404: [libssl3t64, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
-  debian12: [libssl3, procps, iputils-ping, dnsutils, openssh-client, perl, tar, gzip]
+# Runtime packages come from RUNTIME-PACKAGES inside the tarball; add
+# further packages here if needed
+nagios_plugins_extra_packages: []
+
+# Install EPEL and enable CRB/PowerTools on RHEL/Rocky/Alma (fping and Perl
+# modules live there)
+nagios_plugins_enable_epel: true

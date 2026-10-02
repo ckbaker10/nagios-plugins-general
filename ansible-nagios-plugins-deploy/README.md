@@ -6,10 +6,19 @@ The hosts download the tarball themselves and need HTTPS access to github.com. N
 build tools are installed there.
 
 The role picks the tarball matching the host's distribution and major version,
-installs the few runtime packages the plugins need (OpenSSL library, `uptime`,
-`ping`, `dig`, `ssh`, Perl), downloads the tarball, checks it against the `.sha256`
-file of the release and unpacks it to
-`/opt/monitoring-nagios-git-2.4.12`.
+downloads it, checks it against the `.sha256` file of the release, unpacks it
+to `/opt/monitoring-nagios-git-2.4.12` and installs the packages listed in
+`RUNTIME-PACKAGES` inside the tarball. The build writes that list: owners of
+the shared libraries the plugins link against (OpenSSL, libpq, MariaDB/MySQL,
+OpenLDAP, libdbi, ...) plus helper programs (`snmpget`, `fping`, `dig`, `ssh`,
+...) and the Perl modules of the Perl plugins.
+
+On RHEL/Rocky/Alma the role installs EPEL and enables CRB (PowerTools on 8,
+CodeReady Builder on RHEL), where fping and the Perl modules live. Disable with
+`nagios_plugins_enable_epel: false`.
+
+Known gap: `Crypt::X509` is not packaged for SUSE, so `check_ssl_validity`
+does not run there.
 
 ## Supported targets
 
@@ -24,8 +33,8 @@ file of the release and unpacks it to
 | Ubuntu 24.04 | `ubuntu2404` |
 | Debian 12 | `debian12` |
 
-A new OS needs a container image in `build/build.sh` and entries in
-`nagios_plugins_targets` / `nagios_plugins_runtime_packages`.
+A new OS needs a container image in `build/build.sh`, its packages in
+`build/container-build.sh` and an entry in `nagios_plugins_targets`.
 
 ## Usage
 
@@ -39,7 +48,7 @@ ansible-playbook -i inventory.ini playbook.yml
 ansible-playbook -i inventory.ini playbook.yml --limit myserver
 ```
 
-New build: `../build/build.sh`, then `../build/release.sh v2.4.12-2` and set
+New build: `../build/build.sh`, then `../build/release.sh v2.4.12-3` and set
 `nagios_plugins_release_tag` accordingly.
 
 Re-running the playbook changes nothing as long as the tarball is unchanged.
@@ -51,9 +60,11 @@ See `deploy-nagios-checks/defaults/main.yml`:
 
 - `nagios_plugins_version`: version of the tarballs (default `2.4.12`)
 - `nagios_plugins_install_prefix`: must match `PREFIX` of the build
-- `nagios_plugins_release_tag`: GitHub release to deploy (default `v2.4.12-1`)
+- `nagios_plugins_release_tag`: GitHub release to deploy (default `v2.4.12-2`)
 - `nagios_plugins_release_url`: download base URL of the release
-- `nagios_plugins_targets`, `nagios_plugins_runtime_packages`: OS mapping
+- `nagios_plugins_targets`: OS to build target mapping
+- `nagios_plugins_extra_packages`: additional packages to install
+- `nagios_plugins_enable_epel`: EPEL + CRB on EL (default `true`)
 
 ## Verify
 

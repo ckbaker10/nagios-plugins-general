@@ -9,7 +9,7 @@ plugins built by `build/build.sh`.
 | `commands-nagios-plugins-2.4.12.conf` | `git_check_*` | `/opt/monitoring-nagios-git-2.4.12/libexec` (static) |
 | `commands-nagios-plugins-2.4.12.conf.dynamic-path` | `check_*` | `PluginDir` |
 
-Both files contain 57 CheckCommands with 775 arguments (669 with
+Both files contain 66 CheckCommands with 929 arguments (721 with
 description), exactly the plugins contained in the build. Both were validated
 with `icinga2 daemon -C`; the rendered command lines were checked with a
 recording dummy plugin in a running Icinga2.
@@ -35,23 +35,27 @@ plugins that are not part of the build.
 ## Plugins
 
 check_apt, check_breeze, check_by_ssh, check_cluster, check_dhcp, check_dig,
-check_disk, check_disk_smb, check_dns, check_dummy, check_file_age,
-check_flexlm, check_http, check_icmp, check_ide_smart, check_ifoperstatus,
-check_ifstatus, check_ircd, check_load, check_log, check_mailq, check_mrtg,
-check_mrtgtraf, check_nagios, check_nt, check_ntp, check_ntp_peer,
-check_ntp_time, check_nwstat, check_oracle, check_overcr, check_ping,
-check_procs, check_real, check_rpc, check_sensors, check_smtp, check_ssh,
-check_ssl_validity, check_swap, check_tcp, check_time, check_ups,
-check_uptime, check_users, check_wave
+check_dbi, check_disk, check_disk_smb, check_dns, check_dummy, check_file_age,
+check_flexlm, check_fping, check_hpjd, check_http, check_icmp, check_ide_smart,
+check_ifoperstatus, check_ifstatus, check_ircd, check_ldap, check_load,
+check_log, check_mailq, check_mrtg, check_mrtgtraf, check_mysql,
+check_mysql_query, check_nagios, check_nt, check_ntp, check_ntp_peer,
+check_ntp_time, check_nwstat, check_oracle, check_overcr, check_pgsql,
+check_ping, check_procs, check_real, check_rpc, check_sensors, check_smtp,
+check_snmp, check_ssh, check_ssl_validity, check_swap, check_tcp, check_time,
+check_ups, check_uptime, check_users, check_wave
 
 check_tcp aliases (symlinks to check_tcp, same arguments): check_ftp,
 check_imap, check_nntp, check_pop, check_udp, check_clamd, check_simap,
-check_spop, check_jabber, check_nntps, check_ssmtp
+check_spop, check_jabber, check_nntps, check_ssmtp; check_ldaps (symlink to
+check_ldap)
 
-Not built (missing libraries/tools at build time), therefore not generated:
-check_dbi, check_fping, check_game, check_hpjd, check_ldap, check_mssql,
-check_mysql, check_mysql_query, check_netdns, check_pgsql, check_radius,
-check_snmp
+Not built, therefore not generated:
+
+- check_radius: 2.4.12 only supports freeradius-client, which only SUSE still
+  ships (others have radcli); disabled so all targets have the same plugins
+- check_game: needs qstat, not wanted
+- check_mssql, check_netdns: upstream does not install them in 2.4.12
 
 ## How the parser works
 

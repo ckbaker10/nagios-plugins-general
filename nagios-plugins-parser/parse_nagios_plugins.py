@@ -546,26 +546,30 @@ def source_commit(source_root: Path) -> Optional[str]:
         return None
 
 
-def tcp_aliases(source_root: Path) -> List[str]:
-    """check_tcp is installed under several names (symlinks), see plugins/Makefile.am."""
+def plugin_aliases(source_root: Path) -> Dict[str, List[str]]:
+    """Plugins installed under further names (symlinks), see plugins/Makefile.am.
+
+    check_tcp -> check_ftp, check_imap, ...; check_ldap -> check_ldaps
+    """
+    aliases: Dict[str, List[str]] = {}
     makefile = source_root / 'plugins' / 'Makefile.am'
     if not makefile.exists():
-        return []
+        return aliases
     text = makefile.read_text(errors='ignore').replace('\\\n', ' ')
     m = re.search(r'^check_tcp_programs\s*=\s*(.*)$', text, re.MULTILINE)
-    if not m:
-        return []
-    names = m.group(1).split()
-    configure_ac = source_root / 'configure.ac'
-    ssl_names = []
-    if configure_ac.exists():
-        ssl = re.search(r'check_tcp_ssl="([^"]*)"', configure_ac.read_text(errors='ignore'))
-        if ssl:
-            ssl_names = ssl.group(1).split()
-    result = []
-    for name in names:
-        result.extend(ssl_names if name == '@check_tcp_ssl@' else [name])
-    return result
+    if m:
+        ssl_names = []
+        configure_ac = source_root / 'configure.ac'
+        if configure_ac.exists():
+            ssl = re.search(r'check_tcp_ssl="([^"]*)"', configure_ac.read_text(errors='ignore'))
+            if ssl:
+                ssl_names = ssl.group(1).split()
+        for name in m.group(1).split():
+            aliases.setdefault('check_tcp', []).extend(ssl_names if name == '@check_tcp_ssl@' else [name])
+    for target, alias in re.findall(r'ln -s (check_\w+) (check_\w+)', text):
+        if alias not in aliases.get(target, []):
+            aliases.setdefault(target, []).append(alias)
+    return aliases
 
 
 def update_progress(filename: str, status: str, notes: str = "", progress_file: Optional[Path] = None):
@@ -684,6 +688,7 @@ Examples:
     commit = source_commit(plugins_dir)
     ut_macros = load_ut_macros(plugins_dir)
     option_macros = load_option_macros(plugins_dir)
+    aliases = plugin_aliases(plugins_dir)
 
     print(f"Plugins directory: {plugins_dir} (nagios-plugins {version})")
     print(f"Output file: {output_file}")
@@ -717,8 +722,7 @@ Examples:
             continue
         seen.add(name)
         jobs.append((name, f))
-        if name == 'check_tcp':
-            jobs.extend((alias, f) for alias in tcp_aliases(plugins_dir))
+        jobs.extend((alias, f) for alias in aliases.get(name, []))
 
     processed = 0
     skipped_missing = []

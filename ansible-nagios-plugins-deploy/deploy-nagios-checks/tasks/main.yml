@@ -23,16 +23,85 @@
     nagios_plugins_tarball: >-
       nagios-plugins-{{ nagios_plugins_version }}-{{ nagios_plugins_target }}-{{ ansible_facts['architecture'] }}.tar.gz
 
-- name: Install runtime dependencies
+# EPEL provides fping and the Perl modules (Net::SNMP, Crypt::X509, ...)
+- name: Enable EPEL (Rocky/Alma)
   ansible.builtin.package:
-    name: "{{ nagios_plugins_runtime_packages[nagios_plugins_target] }}"
+    name: epel-release
+    state: present
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['os_family'] == 'RedHat'
+    - ansible_facts['distribution'] != 'RedHat'
+
+- name: Enable EPEL (RHEL)
+  ansible.builtin.dnf:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    disable_gpg_check: true
+    state: present
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['distribution'] == 'RedHat'
+
+# EPEL packages depend on CRB (EL9+) / PowerTools (EL8), e.g. perl-Net-SNMP
+# needs perl-Digest-SHA1 on EL8
+- name: Set CRB repository name
+  ansible.builtin.set_fact:
+    nagios_plugins_crb_repo: >-
+      {{ ('codeready-builder-for-rhel-' ~ ansible_facts['distribution_major_version']
+          ~ '-' ~ ansible_facts['architecture'] ~ '-rpms')
+         if ansible_facts['distribution'] == 'RedHat'
+         else ('powertools' if ansible_facts['distribution_major_version'] == '8' else 'crb') }}
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['os_family'] == 'RedHat'
+
+- name: Check enabled repositories
+  ansible.builtin.command:
+    cmd: dnf repolist --enabled
+  register: nagios_plugins_repolist
+  changed_when: false
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['os_family'] == 'RedHat'
+
+- name: Install dnf config-manager
+  ansible.builtin.package:
+    name: dnf-plugins-core
+    state: present
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['os_family'] == 'RedHat'
+    - ansible_facts['distribution'] != 'RedHat'
+
+- name: Enable CRB / PowerTools (Rocky/Alma)
+  ansible.builtin.command:
+    cmd: "dnf config-manager --set-enabled {{ nagios_plugins_crb_repo }}"
+  changed_when: true
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['os_family'] == 'RedHat'
+    - ansible_facts['distribution'] != 'RedHat'
+    - nagios_plugins_crb_repo not in nagios_plugins_repolist.stdout
+
+- name: Enable CodeReady Builder (RHEL)
+  ansible.builtin.command:
+    cmd: "subscription-manager repos --enable {{ nagios_plugins_crb_repo }}"
+  changed_when: true
+  when:
+    - nagios_plugins_enable_epel
+    - ansible_facts['distribution'] == 'RedHat'
+    - nagios_plugins_crb_repo not in nagios_plugins_repolist.stdout
+
+# tar/gzip for unpacking; everything else comes from RUNTIME-PACKAGES
+- name: Install unpack tools
+  ansible.builtin.package:
+    name: [tar, gzip]
     state: present
   when: ansible_facts['os_family'] != 'Suse'
 
-# ansible-core has no zypper backend for the generic package module
-- name: Install runtime dependencies (SUSE)
+- name: Install unpack tools (SUSE)
   community.general.zypper:
-    name: "{{ nagios_plugins_runtime_packages[nagios_plugins_target] }}"
+    name: [tar, gzip]
     state: present
   when: ansible_facts['os_family'] == 'Suse'
 
@@ -61,6 +130,32 @@
     dest: /
     remote_src: true
   when: nagios_plugins_copy is changed or not nagios_plugins_buildinfo.stat.exists
+
+# Written by build/container-build.sh: owners of the linked libraries plus
+# helper programs and Perl modules
+- name: Read runtime package list
+  ansible.builtin.slurp:
+    src: "{{ nagios_plugins_install_prefix }}/RUNTIME-PACKAGES"
+  register: nagios_plugins_runtime_file
+
+- name: Set runtime package list
+  ansible.builtin.set_fact:
+    nagios_plugins_runtime: >-
+      {{ (nagios_plugins_runtime_file.content | b64decode).split()
+         + nagios_plugins_extra_packages }}
+
+- name: Install runtime dependencies
+  ansible.builtin.package:
+    name: "{{ nagios_plugins_runtime }}"
+    state: present
+  when: ansible_facts['os_family'] != 'Suse'
+
+# ansible-core has no zypper backend for the generic package module
+- name: Install runtime dependencies (SUSE)
+  community.general.zypper:
+    name: "{{ nagios_plugins_runtime }}"
+    state: present
+  when: ansible_facts['os_family'] == 'Suse'
 
 - name: Verify installation
   ansible.builtin.command:

@@ -285,6 +285,55 @@ object CheckCommand "check_cluster" {
   }
 }
 
+object CheckCommand "check_dbi" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_dbi" ]
+
+  arguments = {
+    "--verbose" = {
+      set_if = "$check_dbi_verbose$"
+    }
+    "--timeout" = {
+      value = "$check_dbi_timeout$"
+    }
+    "--critical" = {
+      value = "$check_dbi_critical$"
+    }
+    "--warning" = {
+      value = "$check_dbi_warning$"
+    }
+    "--hostname" = {
+      value = "$check_dbi_hostname$"
+    }
+    "--expect" = {
+      value = "$check_dbi_expect$"
+    }
+    "--regex" = {
+      value = "$check_dbi_regex$"
+    }
+    "--regexi" = {
+      value = "$check_dbi_regexi$"
+    }
+    "--metric" = {
+      value = "$check_dbi_metric$"
+    }
+    "--driver" = {
+      value = "$check_dbi_driver$"
+    }
+    "--option" = {
+      value = "$check_dbi_option$"
+    }
+    "--query" = {
+      value = "$check_dbi_query$"
+    }
+    "--database" = {
+      value = "$check_dbi_database$"
+    }
+  }
+
+  vars.check_dbi_hostname = "$address$"
+}
+
 object CheckCommand "check_dhcp" {
   import "plugin-check-command"
   command = [ PluginDir + "/check_dhcp" ]
@@ -724,6 +773,89 @@ object CheckCommand "check_flexlm" {
       description = "Plugin time out in seconds (default = 15 )"
     }
   }
+}
+
+object CheckCommand "check_fping" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_fping" ]
+
+  arguments = {
+    "--hostname" = {
+      value = "$check_fping_hostname$"
+      description = "name or IP Address of host to ping (IP Address bypasses name lookup, reducing system load)"
+    }
+    "--sourceip" = {
+      value = "$check_fping_sourceip$"
+      description = "name or IP Address of sourceip"
+    }
+    "--sourceif" = {
+      value = "$check_fping_sourceif$"
+      description = "source interface name"
+    }
+    "--critical" = {
+      value = "$check_fping_critical$"
+      description = "critical threshold pair"
+    }
+    "--warning" = {
+      value = "$check_fping_warning$"
+      description = "warning threshold pair"
+    }
+    "--bytes" = {
+      value = "$check_fping_bytes$"
+      description = "size of ICMP packet (default: 56)"
+    }
+    "--number" = {
+      value = "$check_fping_number$"
+      description = "number of ICMP packets to send (default: 1)"
+    }
+    "--target-timeout" = {
+      value = "$check_fping_target_timeout$"
+      description = "Target timeout (ms) (default: fping's default for -t)"
+    }
+    "--interval" = {
+      value = "$check_fping_interval$"
+      description = "Interval (ms) between sending packets (default: fping's default for -p)"
+    }
+    "--verbose" = {
+      set_if = "$check_fping_verbose$"
+      description = "Show details for command-line debugging (Nagios may truncate output)"
+    }
+    "--use-ipv4" = {
+      set_if = "$check_fping_use_ipv4$"
+      description = "Use IPv4 connection"
+    }
+    "--use-ipv6" = {
+      set_if = "$check_fping_use_ipv6$"
+      description = "Use IPv6 connection"
+    }
+  }
+
+  vars.check_fping_hostname = "$address$"
+}
+
+object CheckCommand "check_hpjd" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_hpjd" ]
+
+  arguments = {
+    "--hostname" = {
+      value = "$check_hpjd_hostname$"
+    }
+    "--community" = {
+      value = "$check_hpjd_community$"
+      description = "The SNMP community name (default=public)"
+    }
+    "--port" = {
+      value = "$check_hpjd_port$"
+      description = "Specify the port to check (default=161)"
+    }
+    "--flawcorrection" = {
+      set_if = "$check_hpjd_flawcorrection$"
+      description = "Correct false offline status reports (default=false)"
+    }
+  }
+
+  vars.check_hpjd_hostname = "$address$"
 }
 
 object CheckCommand "check_http" {
@@ -1263,6 +1395,146 @@ object CheckCommand "check_ircd" {
   vars.check_ircd_hostname = "$address$"
 }
 
+object CheckCommand "check_ldap" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_ldap" ]
+
+  arguments = {
+    "--timeout" = {
+      value = "$check_ldap_timeout$"
+    }
+    "--hostname" = {
+      value = "$check_ldap_hostname$"
+    }
+    "--uri" = {
+      value = "$check_ldap_uri$"
+    }
+    "--base" = {
+      value = "$check_ldap_base$"
+    }
+    "--attr" = {
+      value = "$check_ldap_attr$"
+    }
+    "--bind" = {
+      value = "$check_ldap_bind$"
+    }
+    "--pass" = {
+      value = "$check_ldap_pass$"
+    }
+    "--ver2" = {
+      set_if = "$check_ldap_ver2$"
+    }
+    "--ver3" = {
+      set_if = "$check_ldap_ver3$"
+    }
+    "--starttls" = {
+      set_if = "$check_ldap_starttls$"
+    }
+    "--ssl" = {
+      set_if = "$check_ldap_ssl$"
+    }
+    "--age" = {
+      value = "$check_ldap_age$"
+    }
+    "--use-ipv4" = {
+      set_if = "$check_ldap_use_ipv4$"
+    }
+    "--use-ipv6" = {
+      set_if = "$check_ldap_use_ipv6$"
+    }
+    "--port" = {
+      value = "$check_ldap_port$"
+    }
+    "--warn" = {
+      value = "$check_ldap_warn$"
+    }
+    "--crit" = {
+      value = "$check_ldap_crit$"
+    }
+    "--warn-entries" = {
+      value = "$check_ldap_warn_entries$"
+    }
+    "--crit-entries" = {
+      value = "$check_ldap_crit_entries$"
+    }
+    "--verbose" = {
+      set_if = "$check_ldap_verbose$"
+    }
+  }
+
+  vars.check_ldap_hostname = "$address$"
+}
+
+object CheckCommand "check_ldaps" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_ldaps" ]
+
+  arguments = {
+    "--timeout" = {
+      value = "$check_ldaps_timeout$"
+    }
+    "--hostname" = {
+      value = "$check_ldaps_hostname$"
+    }
+    "--uri" = {
+      value = "$check_ldaps_uri$"
+    }
+    "--base" = {
+      value = "$check_ldaps_base$"
+    }
+    "--attr" = {
+      value = "$check_ldaps_attr$"
+    }
+    "--bind" = {
+      value = "$check_ldaps_bind$"
+    }
+    "--pass" = {
+      value = "$check_ldaps_pass$"
+    }
+    "--ver2" = {
+      set_if = "$check_ldaps_ver2$"
+    }
+    "--ver3" = {
+      set_if = "$check_ldaps_ver3$"
+    }
+    "--starttls" = {
+      set_if = "$check_ldaps_starttls$"
+    }
+    "--ssl" = {
+      set_if = "$check_ldaps_ssl$"
+    }
+    "--age" = {
+      value = "$check_ldaps_age$"
+    }
+    "--use-ipv4" = {
+      set_if = "$check_ldaps_use_ipv4$"
+    }
+    "--use-ipv6" = {
+      set_if = "$check_ldaps_use_ipv6$"
+    }
+    "--port" = {
+      value = "$check_ldaps_port$"
+    }
+    "--warn" = {
+      value = "$check_ldaps_warn$"
+    }
+    "--crit" = {
+      value = "$check_ldaps_crit$"
+    }
+    "--warn-entries" = {
+      value = "$check_ldaps_warn_entries$"
+    }
+    "--crit-entries" = {
+      value = "$check_ldaps_crit_entries$"
+    }
+    "--verbose" = {
+      set_if = "$check_ldaps_verbose$"
+    }
+  }
+
+  vars.check_ldaps_hostname = "$address$"
+}
+
 object CheckCommand "check_load" {
   import "plugin-check-command"
   command = [ PluginDir + "/check_load" ]
@@ -1440,6 +1712,131 @@ object CheckCommand "check_mrtgtraf" {
       description = "Define the maximum bandwidth on the port being monitored (Bytes/sec) This adds percentages to performance data output"
     }
   }
+}
+
+object CheckCommand "check_mysql" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_mysql" ]
+
+  arguments = {
+    "--hostname" = {
+      value = "$check_mysql_hostname$"
+    }
+    "--socket" = {
+      value = "$check_mysql_socket$"
+    }
+    "--database" = {
+      value = "$check_mysql_database$"
+    }
+    "--username" = {
+      value = "$check_mysql_username$"
+    }
+    "--password" = {
+      value = "$check_mysql_password$"
+    }
+    "--file" = {
+      value = "$check_mysql_file$"
+    }
+    "--group" = {
+      value = "$check_mysql_group$"
+    }
+    "--port" = {
+      value = "$check_mysql_port$"
+    }
+    "--critical" = {
+      value = "$check_mysql_critical$"
+    }
+    "--warning" = {
+      value = "$check_mysql_warning$"
+    }
+    "--check-slave" = {
+      set_if = "$check_mysql_check_slave$"
+    }
+    "--ignore-auth" = {
+      set_if = "$check_mysql_ignore_auth$"
+    }
+    "--verbose" = {
+      set_if = "$check_mysql_verbose$"
+    }
+    "--ssl" = {
+      set_if = "$check_mysql_ssl$"
+    }
+    "--ca-cert" = {
+      value = {{
+        var v = macro("$check_mysql_ca_cert$")
+        if (v == true) { return "--ca-cert" }
+        if (v != false && v != "") { return "--ca-cert=" + v }
+      }}
+      skip_key = true
+      set_if = {{
+        var v = macro("$check_mysql_ca_cert$")
+        return v != false && v != "" && v != null
+      }}
+    }
+    "--key" = {
+      value = "$check_mysql_key$"
+    }
+    "--cert" = {
+      value = "$check_mysql_cert$"
+    }
+    "--ca-dir" = {
+      value = "$check_mysql_ca_dir$"
+    }
+    "--ciphers" = {
+      value = "$check_mysql_ciphers$"
+    }
+  }
+
+  vars.check_mysql_hostname = "$address$"
+}
+
+object CheckCommand "check_mysql_query" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_mysql_query" ]
+
+  arguments = {
+    "--hostname" = {
+      value = "$check_mysql_query_hostname$"
+    }
+    "--socket" = {
+      value = "$check_mysql_query_socket$"
+    }
+    "--database" = {
+      value = "$check_mysql_query_database$"
+    }
+    "--username" = {
+      value = "$check_mysql_query_username$"
+    }
+    "--password" = {
+      value = "$check_mysql_query_password$"
+    }
+    "--character-set" = {
+      value = "$check_mysql_query_character_set$"
+    }
+    "--file" = {
+      value = "$check_mysql_query_file$"
+    }
+    "--group" = {
+      value = "$check_mysql_query_group$"
+    }
+    "--port" = {
+      value = "$check_mysql_query_port$"
+    }
+    "--verbose" = {
+      set_if = "$check_mysql_query_verbose$"
+    }
+    "--query" = {
+      value = "$check_mysql_query_query$"
+    }
+    "--warning" = {
+      value = "$check_mysql_query_warning$"
+    }
+    "--critical" = {
+      value = "$check_mysql_query_critical$"
+    }
+  }
+
+  vars.check_mysql_query_hostname = "$address$"
 }
 
 object CheckCommand "check_nagios" {
@@ -1863,6 +2260,61 @@ object CheckCommand "check_overcr" {
   vars.check_overcr_hostname = "$address$"
 }
 
+object CheckCommand "check_pgsql" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_pgsql" ]
+
+  arguments = {
+    "--timeout" = {
+      value = "$check_pgsql_timeout$"
+    }
+    "--critical" = {
+      value = "$check_pgsql_critical$"
+    }
+    "--warning" = {
+      value = "$check_pgsql_warning$"
+    }
+    "--hostname" = {
+      value = "$check_pgsql_hostname$"
+    }
+    "--logname" = {
+      value = "$check_pgsql_logname$"
+    }
+    "--password" = {
+      value = "$check_pgsql_password$"
+    }
+    "--authorization" = {
+      value = "$check_pgsql_authorization$"
+    }
+    "--port" = {
+      value = "$check_pgsql_port$"
+    }
+    "--database" = {
+      value = "$check_pgsql_database$"
+    }
+    "--option" = {
+      value = "$check_pgsql_option$"
+    }
+    "--query" = {
+      value = "$check_pgsql_query$"
+    }
+    "--query_critical" = {
+      value = "$check_pgsql_query_critical$"
+    }
+    "--query_warning" = {
+      value = "$check_pgsql_query_warning$"
+    }
+    "--print-query" = {
+      set_if = "$check_pgsql_print_query$"
+    }
+    "--verbose" = {
+      set_if = "$check_pgsql_verbose$"
+    }
+  }
+
+  vars.check_pgsql_hostname = "$address$"
+}
+
 object CheckCommand "check_ping" {
   import "plugin-check-command"
   command = [ PluginDir + "/check_ping" ]
@@ -2193,6 +2645,167 @@ object CheckCommand "check_smtp" {
   }
 
   vars.check_smtp_hostname = "$address$"
+}
+
+object CheckCommand "check_snmp" {
+  import "plugin-check-command"
+  command = [ PluginDir + "/check_snmp" ]
+
+  arguments = {
+    "--verbose" = {
+      set_if = "$check_snmp_verbose$"
+      description = "Show details for command-line debugging (Nagios may truncate output)"
+    }
+    "--timeout" = {
+      value = "$check_snmp_timeout$"
+      description = "state> Seconds before connection times out (default: 10) Optional \":<timeout state>\" can be a state integer (0,1,2,3) or a state STRING"
+    }
+    "--critical" = {
+      value = "$check_snmp_critical$"
+      description = "Critical threshold range(s)"
+    }
+    "--warning" = {
+      value = "$check_snmp_warning$"
+      description = "Warning threshold range(s)"
+    }
+    "--hostname" = {
+      value = "$check_snmp_hostname$"
+      description = "Host name, IP Address, or unix socket (must be an absolute path)"
+    }
+    "--community" = {
+      value = "$check_snmp_community$"
+      description = "Optional community string for SNMP communication (default is \"public\")"
+    }
+    "--oid" = {
+      value = "$check_snmp_oid$"
+      description = "Object identifier(s) or SNMP variables whose value you wish to query"
+    }
+    "--object" = {
+      value = "$check_snmp_object$"
+      description = "Object identifier(s) or SNMP variables whose value you wish to query"
+    }
+    "--delimiter" = {
+      value = "$check_snmp_delimiter$"
+      description = "Delimiter to use when parsing returned data. Default is \"=\" Any data on the right hand side of the delimiter is considered to be the data that should be used in the evaluation."
+    }
+    "--output-delimiter" = {
+      value = "$check_snmp_output_delimiter$"
+      description = "Separates output on multiple OID requests"
+    }
+    "--string" = {
+      value = "$check_snmp_string$"
+      description = "Return OK state (for that OID) if STRING is an exact match"
+    }
+    "--regex" = {
+      value = "$check_snmp_regex$"
+      description = "Return OK state (for that OID) if extended regular expression REGEX matches"
+    }
+    "--ereg" = {
+      value = "$check_snmp_ereg$"
+      description = "Return OK state (for that OID) if extended regular expression REGEX matches"
+    }
+    "--eregi" = {
+      value = "$check_snmp_eregi$"
+      description = "Return OK state (for that OID) if case-insensitive extended REGEX matches"
+    }
+    "--label" = {
+      value = "$check_snmp_label$"
+      description = "Prefix label for output from plugin"
+    }
+    "--units" = {
+      value = "$check_snmp_units$"
+      description = "Units label(s) for output data (e.g., 'sec.')."
+    }
+    "--port" = {
+      value = "$check_snmp_port$"
+      description = "Port number (default: 161)"
+    }
+    "--retries" = {
+      value = "$check_snmp_retries$"
+      description = "Number of retries to be used in the requests"
+    }
+    "--miblist" = {
+      value = "$check_snmp_miblist$"
+      description = "List of MIBS to be loaded (default = none if using numeric OIDs or 'ALL' for symbolic OIDs.)"
+    }
+    "--protocol" = {
+      value = "$check_snmp_protocol$"
+      description = "SNMP protocol version"
+    }
+    "--context" = {
+      value = "$check_snmp_context$"
+      description = "SNMPv3 context"
+    }
+    "--seclevel" = {
+      value = "$check_snmp_seclevel$"
+      description = "SNMPv3 securityLevel"
+    }
+    "--secname" = {
+      value = "$check_snmp_secname$"
+      description = "SNMPv3 username"
+    }
+    "--authproto" = {
+      value = "$check_snmp_authproto$"
+      description = "SNMPv3 auth proto"
+    }
+    "--privproto" = {
+      value = "$check_snmp_privproto$"
+      description = "SNMPv3 priv proto (default DES)"
+    }
+    "--authpasswd" = {
+      value = "$check_snmp_authpasswd$"
+      description = "SNMPv3 authentication password"
+    }
+    "--privpasswd" = {
+      value = "$check_snmp_privpasswd$"
+      description = "SNMPv3 privacy password"
+    }
+    "--next" = {
+      set_if = "$check_snmp_next$"
+      description = "Use SNMP GETNEXT instead of SNMP GET"
+    }
+    "--strict" = {
+      set_if = "$check_snmp_strict$"
+      description = "Enable strict mode: arguments to -o will be checked against the OID returned by snmpget. If they don't match, the plugin returns UNKNOWN."
+    }
+    "--rate" = {
+      set_if = "$check_snmp_rate$"
+      description = "Enable rate calculation. See 'Rate Calculation' below"
+    }
+    "--rate-multiplier" = {
+      value = "$check_snmp_rate_multiplier$"
+      description = "Converts rate per second. For example, set to 60 to convert to per minute"
+    }
+    "--offset" = {
+      value = "$check_snmp_offset$"
+      description = "Add/subtract the specified OFFSET to numeric sensor data"
+    }
+    "--multiplier" = {
+      value = "$check_snmp_multiplier$"
+      description = "Multiply the numeric sensor data by MULTIPLIER before doing comparisons"
+    }
+    "--invert-search" = {
+      set_if = "$check_snmp_invert_search$"
+      description = "Invert search result (CRITICAL if found)"
+    }
+    "--perf-oids" = {
+      set_if = "$check_snmp_perf_oids$"
+      description = "Label performance data with OIDs instead of --label's"
+    }
+    "--ipv4" = {
+      set_if = "$check_snmp_ipv4$"
+      description = "Use IPv4 connection"
+    }
+    "--ipv6" = {
+      set_if = "$check_snmp_ipv6$"
+      description = "Use IPv6 connection"
+    }
+    "-E" = {
+      value = "$check_snmp_E$"
+    }
+  }
+
+  vars.check_snmp_hostname = "$address$"
 }
 
 object CheckCommand "check_ssh" {
