@@ -12,9 +12,9 @@ galaxy_info:
     - name: opensuse
       versions: ["15.6", "16.0"]
     - name: Ubuntu
-      versions: [jammy, noble]
+      versions: [jammy, noble, resolute]
     - name: Debian
-      versions: [bookworm]
+      versions: [bookworm, trixie]
 
   galaxy_tags:
     - nagios

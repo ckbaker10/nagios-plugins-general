@@ -8,7 +8,19 @@ different parameters. This repository builds nagios-plugins from source in one
 version (currently `release-2.5`) so every host runs identical plugins and
 one set of Icinga2 CheckCommands fits all of them.
 
-Custom plugins live in [nagios-plugins-custom](https://github.com/ckbaker10/nagios-plugins-custom).
+Current release: [v2.5-1](https://github.com/ckbaker10/nagios-plugins-general/releases/tag/v2.5-1),
+27 tarballs for RHEL/Rocky/Alma 8–10, SLES/openSUSE Leap 15–16, Debian 12–13,
+Ubuntu 22.04–26.04 (x86_64, aarch64, armhf) and Raspberry Pi OS 32-bit
+(ARMv6), each with the same 66 plugins. Installed under
+`/opt/monitoring-nagios-git-<version>`, linked as `/opt/monitoring-nagios-git`.
+
+Related repositories:
+
+- [nagios-plugins-custom](https://github.com/ckbaker10/nagios-plugins-custom):
+  own plugins (Tapo, LTE router, SMS, …) as one x86_64 bundle
+- [docker-compose-icinga](https://github.com/ckbaker10/docker-compose-icinga):
+  Icinga master stack; the generated `icinga-commands/commands-nagios-plugins.conf`
+  goes into its `global-zone/` directory
 
 ## Contents
 
@@ -18,6 +30,7 @@ Custom plugins live in [nagios-plugins-custom](https://github.com/ckbaker10/nagi
 | `ansible-nagios-plugins-deploy/` | Ansible role/playbook: downloads the matching tarball from the GitHub release and installs it to `/opt/monitoring-nagios-git-<version>`, linked as `/opt/monitoring-nagios-git` |
 | `nagios-plugins-parser/` | Parses the nagios-plugins sources and generates Icinga2 CheckCommand definitions |
 | `icinga-commands/` | Generated CheckCommands (static and dynamic path) and import notes |
+| `docs/` | [PLATFORMS.md](docs/PLATFORMS.md) (OS/CPU/hardware matrix), [VERSIONING.md](docs/VERSIONING.md) (release naming, upgrade, rollback) |
 
 ## Generate CheckCommands
 
